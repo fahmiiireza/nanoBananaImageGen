@@ -1,168 +1,84 @@
-# UGC Script Splitter for Veo 3
+# nanoBananaImageGen
 
-Transform your UGC scripts into AI-ready video segments with integrated Veo 3 support.
+nanoBananaImageGen is a web application that generates image prompts and images using various AI services. It features a React frontend and a Node.js backend.
 
 ## Features
 
-- 📝 **Script Splitting**: Automatically splits long scripts into 8-second segments
-- 🎭 **Two JSON Formats**: 
-  - Standard (300+ words) 
-  - Enhanced Continuity (500+ words with micro-expressions)
-- 🎬 **Veo 3 Integration**: Generate video descriptions (full video generation coming soon)
-- 📦 **Bulk Export**: Download all segments as ZIP
-- 💰 **Cost Estimation**: See video generation costs upfront
+-   Generate image prompts with OpenAI.
+-   Generate images with OpenRouter.
+-   Upload images to Google Drive.
+-   Modern UI for interacting with the services.
 
-## Setup
+## Tech Stack
 
-### 1. Install Dependencies
+-   **Frontend:** React, Vite
+-   **Backend:** Node.js, Express
+-   **Services:**
+    -   OpenAI API
+    -   OpenRouter AI
+    -   Google Drive API
+
+## Setup and Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/nanoBananaImageGen.git
+cd nanoBananaImageGen
+```
+
+### 2. Install dependencies
+
+This command will install dependencies for both the server and the client.
+
 ```bash
 npm run install-all
 ```
 
-### 2. Configure API Keys
+### 3. Configure Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory of the project and add the following environment variables:
 
 ```env
-# OpenAI (Required)
-OPENAI_API_KEY=sk-...
+# OpenAI API Key
+OPENAI_API_KEY=your-openai-api-key
 
-# Choose ONE of these authentication methods:
+# OpenRouter API Key
+OPENROUTER_API_KEY=your-openrouter-api-key
 
-# Option A: Gemini API (Simple)
-GOOGLE_GEMINI_API_KEY=your-gemini-api-key
-
-# Option B: Vertex AI with Service Account (Enterprise)
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
-VERTEX_PROJECT_ID=your-project-id
-VERTEX_LOCATION=us-central1
-
-# Option C: Kie.ai for Actual Video Generation (93% cheaper!)
-KIEAI_API_KEY=your-kieai-api-key
+# Google Drive API Credentials
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=your-google-redirect-uri
+GOOGLE_REFRESH_TOKEN=your-google-refresh-token
 ```
 
-### 3. Vertex AI Setup (If using Vertex AI)
+### 4. Running the Application
 
-1. **Create a Service Account**:
-   ```bash
-   gcloud iam service-accounts create veo3-service \
-     --display-name="Veo 3 Service Account"
-   ```
+You can run the application in development mode, which will automatically rebuild the client and restart the server on file changes.
 
-2. **Grant Required Permissions**:
-   ```bash
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:veo3-service@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-     --role="roles/aiplatform.user"
-   ```
-
-3. **Download Service Account Key**:
-   ```bash
-   gcloud iam service-accounts keys create ./service-account-key.json \
-     --iam-account=veo3-service@YOUR_PROJECT_ID.iam.gserviceaccount.com
-   ```
-
-4. **Update .env**:
-   ```env
-   GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
-   VERTEX_PROJECT_ID=your-project-id
-   VERTEX_LOCATION=us-central1
-   ```
-
-## Running the App
-
-### Development
 ```bash
 npm run dev
 ```
-Access at http://localhost:3001
 
-### Production
+The application will be available at `http://localhost:3001`.
+
+## Running with Docker
+
+To run the application with Docker, first ensure you have Docker and Docker Compose installed. Then, from the root of the project, run:
+
 ```bash
-npm run build
-npm start
+docker-compose up --build
 ```
 
-## Usage
-
-1. **Enter Your Script**: Paste your UGC script (minimum 50 characters)
-2. **Configure Settings**: 
-   - Select age range, gender, room style
-   - Choose JSON format (Standard or Enhanced)
-3. **Generate Segments**: Click to create AI-ready JSON segments
-4. **Generate Videos** (Optional): Create video descriptions with Veo 3
-5. **Download**: Export all segments as ZIP
+The application will be available at `http://localhost:3001`.
 
 ## API Endpoints
 
-- `POST /api/generate` - Generate JSON segments from script
-- `POST /api/download` - Download segments as ZIP
-- `POST /api/generate-videos` - Generate video descriptions
-
-## Cost Information
-
-### Official Veo 3 API (When Available)
-- **Cost**: $0.75 per second of video
-- **8-second segments**: $6 per segment
-- **Example**: 5 segments = $30
-
-### Kie.ai Integration (Available Now!)
-- **Cost**: $0.40 per video (flat rate, not per second)
-- **8-second segments**: $0.40 per segment
-- **Example**: 5 segments = $2
-- **Savings**: 93% cheaper than official API
-
-## Kie.ai Setup (For Actual Video Generation)
-
-1. **Sign up at https://siliconflow.cn**
-   - Use Google login for easy access
-   - Top up your balance ($5 minimum)
-
-2. **Get your API key**
-   - Go to API Keys section
-   - Copy your key
-
-3. **Add to .env**
-   ```env
-   KIEAI_API_KEY=your-kieai-api-key
-   ```
-
-4. **Use in the app**
-   - Toggle "Use Kie.ai" in the Video Generator
-   - Videos generate in 5-8 minutes
-   - Download links appear when ready
-
-## Deployment
-
-### Heroku
-```bash
-heroku create your-app-name
-heroku config:set OPENAI_API_KEY=sk-...
-heroku config:set GOOGLE_GEMINI_API_KEY=...
-git push heroku main
-```
-
-### Google Cloud Run
-```bash
-gcloud run deploy ugc-script-splitter \
-  --source . \
-  --set-env-vars OPENAI_API_KEY=sk-... \
-  --allow-unauthenticated
-```
-
-## Security Notes
-
-- Never commit API keys or service account files
-- Add `service-account-key.json` to `.gitignore`
-- Use environment variables for all sensitive data
-
-## Future Features
-
-- [ ] Direct Veo 3 video generation (when API is available)
-- [ ] Image-to-video support
-- [ ] Video preview in browser
-- [ ] Batch processing for multiple scripts
+-   `POST /api/generate`: Generates image prompts.
+-   `POST /api/generate-image`: Generates an image.
+-   `POST /api/upload-image`: Uploads an image to Google Drive.
 
 ## License
 
-MIT
+This project is licensed under the MIT License.

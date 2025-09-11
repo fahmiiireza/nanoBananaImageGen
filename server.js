@@ -1,16 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import generateRoute from './api/routes/generate.js';
-import generateContinuationRoute from './api/routes/generateContinuation.js';
-import generatePlusRoute from './api/routes/generate.plus.js';
-import generateNewContRoute from './api/routes/generate.newcont.js';
-
-// ES module compatibility
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
+const generateRoute = require('./api/routes/generate.js');
 
 dotenv.config();
 
@@ -29,12 +21,9 @@ app.use(express.json({ limit: '10mb' }));
 
 // API Routes (before static files)
 app.use('/api', generateRoute);
-app.use('/api', generateContinuationRoute);
-app.use('/api', generatePlusRoute);
-app.use('/api', generateNewContRoute);
 
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'client/dist')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -43,7 +32,7 @@ app.get('/api/health', (req, res) => {
 
 // Catch all handler - send React app for any route not handled above
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'build', 'index.html');
+  const indexPath = path.join(__dirname, 'client/dist', 'index.html');
   console.log(`Serving React app from: ${indexPath}`);
   res.sendFile(indexPath, (err) => {
     if (err) {
@@ -65,5 +54,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Build directory: ${path.join(__dirname, 'build')}`);
+  console.log(`Build directory: ${path.join(__dirname, 'client/dist')}`);
 });

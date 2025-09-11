@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
-    "dev": "npm run server",
-    "server": "nodemon server.js",
+    "dev": "npm run build && npm run server",
+    "server": "nodemon -r dotenv/config server.js",
     "build": "cd client && npm run build",
-    "start": "node server.js",
+    "start": "node -r dotenv/config server.js",
     "install-all": "npm install && cd client && npm install",
     "heroku-postbuild": "cd client && npm install && npm run build"
   },
