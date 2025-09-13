@@ -10,17 +10,19 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [successInfo, setSuccessInfo] = useState(null);
 
   const handleSubmit = async (formData) => {
     console.log('Form submitted with:', formData);
     setLoading(true);
     setError(null);
     setResults(null);
+    setSuccessInfo(null);
     
     try {
       const response = await generateSegments(formData);
       console.log('Generation successful:', response);
-      setResults(response);
+      setSuccessInfo(response);
     } catch (err) {
       console.error('Generation failed:', err);
       setError(err.message || 'Something went wrong');
@@ -41,6 +43,12 @@ function App() {
           <ScriptForm onSubmit={handleSubmit} loading={loading} />
           {error && (
             <div className="error-message">Error: {error}</div>
+          )}
+          {successInfo && (
+            <div className="success-message">
+              <p>Your image is currently being generated. Once done, you can see it in the folder: {successInfo.folderName}</p>
+              <p>Click <a href={successInfo.linkToFolder} target="_blank" rel="noopener noreferrer">here</a> to view the folder.</p>
+            </div>
           )}
           {results && (
             <ResultsDisplay results={results} />
