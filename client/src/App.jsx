@@ -35,8 +35,8 @@ function App() {
     <ErrorBoundary>
       <div className="App">
         <header className="App-header">
-          <h1>Image Prompt Generator</h1>
-          <p>Generate JSON prompts and images with OpenRouter</p>
+          <h1>Nano Banana Image Generator</h1>
+          <p>From prompt to picture-perfect. AI-powered image generation for marketers.</p>
         </header>
 
         <main className="App-main">

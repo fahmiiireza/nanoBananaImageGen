@@ -10,6 +10,7 @@ function ScriptForm({ onSubmit, loading }) {
     product: '',
     googleDriveFolderName: '',
     vertical: 'EDU',
+    model: 'Nano Banana (Text to Image)',
     imageCount: 1,
   });
   const [imageFile, setImageFile] = useState(null);
@@ -23,13 +24,17 @@ function ScriptForm({ onSubmit, loading }) {
   };
 
   const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
+    setImageFile(e.target.files);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = new FormData();
-    data.append('image', imageFile);
+    if (formData.model !== 'Flux Pro (Text to Image)' && formData.model !== 'Nano Banana (Text to Image)') {
+      for (let i = 0; i < imageFile.length; i++) {
+        data.append('image', imageFile[i]);
+      }
+    }
     for (const key in formData) {
       data.append(key, formData[key]);
     }
@@ -66,6 +71,21 @@ function ScriptForm({ onSubmit, loading }) {
           <option value="Gutters">Gutters</option>
           <option value="GLP-1">GLP-1</option>
           <option value="TRT">TRT</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="model">Model</label>
+        <select
+          id="model"
+          name="model"
+          value={formData.model}
+          onChange={handleChange}
+        >
+          <option value="Nano Banana (Text to Image)">Nano Banana (Text to Image)</option>
+          <option value="Nano Banana (Image to Image)">Nano Banana (Image to Image)</option>
+          <option value="Flux Pro (Text to Image)">Flux Pro (Text to Image)</option>
+          <option value="Flux Pro Ultra (Image to Image)">Flux Pro Ultra (Image to Image)</option>
         </select>
       </div>
 
@@ -139,6 +159,8 @@ function ScriptForm({ onSubmit, loading }) {
           onChange={handleChange}
         >
           <option value="1">1</option>
+          <option value="3">3</option>
+          <option value="5">5</option>
           <option value="10">10</option>
           <option value="25">25</option>
           <option value="50">50</option>
@@ -146,15 +168,18 @@ function ScriptForm({ onSubmit, loading }) {
         </select>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="image">Upload Image</label>
-        <input
-          type="file"
-          id="image"
-          name="image"
-          onChange={handleFileChange}
-        />
-      </div>
+      {formData.model !== 'Flux Pro (Text to Image)' && formData.model !== 'Nano Banana (Text to Image)' && (
+        <div className="form-group">
+          <label htmlFor="image">Upload Image</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            onChange={handleFileChange}
+            multiple={formData.model.includes('Nano Banana')}
+          />
+        </div>
+      )}
 
       <button 
         type="submit" 
