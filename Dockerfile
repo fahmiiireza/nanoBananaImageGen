@@ -1,27 +1,43 @@
-# Stage 1: Build the client
-FROM node:18-alpine AS client-builder
+# ---- Builder Stage ----
+# This stage builds the client-side React application.
+FROM node:20 AS builder
 
-WORKDIR /app/client
+# Set the working directory for the client
+WORKDIR /usr/src/app/client
 
-COPY client/package.json client/package-lock.json ./
+# Copy client's package.json and package-lock.json
+COPY client/package*.json ./
+
+# Install client dependencies
 RUN npm install
 
+# Copy the rest of the client's code
 COPY client/ ./
+
+# Build the client application
 RUN npm run build
 
-# Stage 2: Setup the server
-FROM node:18-alpine
+# ---- Production Stage ----
+# This stage creates the final, lean production image.
+FROM node:20-alpine
 
-WORKDIR /app
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
-RUN npm install --production
+# Copy server's package.json and package-lock.json
+COPY package*.json ./
 
+# Install only production dependencies for the server
+RUN npm install --only=production
+
+# Copy the server-side code
 COPY . .
 
-# Copy the built client from the client-builder stage
-COPY --from=client-builder /app/client/dist ./client/dist
+# Copy the built client application from the builder stage
+COPY --from=builder /usr/src/app/client/dist ./client/dist
 
-EXPOSE 3001
+# Expose port 3000
+EXPOSE 3000
 
-CMD ["npm", "start"]
+# Command to run the application
+CMD [ "node", "server.js" ]

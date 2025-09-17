@@ -1,8 +1,9 @@
 node_modules
-client/node_modules
-.git
-.gitignore
+npm-debug.log
+build
 .dockerignore
 Dockerfile
 docker-compose.yml
-.env
+.git
+client/node_modules
+client/dist
