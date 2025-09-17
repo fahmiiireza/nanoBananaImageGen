@@ -35,7 +35,7 @@ function App() {
     <ErrorBoundary>
       <div className="App">
         <header className="App-header">
-          <h1>Nano Banana Image Generator</h1>
+          <h1>UGC Image Generator</h1>
           <p>From prompt to picture-perfect. AI-powered image generation for marketers.</p>
         </header>
 
