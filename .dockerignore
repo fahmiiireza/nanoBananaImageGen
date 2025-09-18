@@ -7,3 +7,6 @@ docker-compose.yml
 .git
 client/node_modules
 client/dist
+README.md
+LICENSE
+*.md
