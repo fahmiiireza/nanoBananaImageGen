@@ -4,12 +4,8 @@ import React, { useState } from 'react';
 function ScriptForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     imageDescription: '',
-    aspectRatio: '1080x1080',
-    seed:'',
-    negativePrompt: '',
     products:'',
     googleDriveFolderName: '',
-    vertical: 'EDU',
     model: 'Nano Banana (Text to Image)',
     imageCount: 1,
   });
@@ -35,9 +31,11 @@ function ScriptForm({ onSubmit, loading }) {
         data.append('image', imageFile[i]);
       }
     }
+    const vertical = formData.googleDriveFolderName.split('-')[1]?.trim();
     for (const key in formData) {
       data.append(key, formData[key]);
     }
+    data.append('vertical', vertical);
     onSubmit(data);
   };
 
@@ -53,25 +51,6 @@ function ScriptForm({ onSubmit, loading }) {
           onChange={handleChange}
           placeholder="(Project Description/iteration) (- Headline #) ( - Body #) ( - CTA #)"
         />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="vertical">Vertical</label>
-        <select
-          id="vertical"
-          name="vertical"
-          value={formData.vertical}
-          onChange={handleChange}
-        >
-          <option value="EDU">EDU</option>
-          <option value="Cash Offer Aggro">Cash Offer Aggro</option>
-          <option value="Clinical Trial">Clinical Trial</option>
-          <option value="Windows">Windows</option>
-          <option value="Cash Offer Vanilla">Cash Offer Vanilla</option>
-          <option value="Gutters">Gutters</option>
-          <option value="GLP-1">GLP-1</option>
-          <option value="TRT">TRT</option>
-        </select>
       </div>
 
       <div className="form-group">
@@ -102,81 +81,6 @@ function ScriptForm({ onSubmit, loading }) {
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="negativePrompt">Negative Prompt</label>
-        <textarea
-          id="negativePrompt"
-          name="negativePrompt"
-          value={formData.negativePrompt}
-          onChange={handleChange}
-          placeholder="e.g., blurry, low quality, bad hands..."
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="aspectRatio">Aspect Ratio</label>
-        <input type="text"
-               id="aspectRatio"
-               name="aspectRatio"
-               value={formData.aspectRatio}
-               readOnly
-               onChange={handleChange}
-        
-        />
-        </div>
-        {/* <select
-          
-          id="aspectRatio"
-          name="aspectRatio"
-          value={formData.aspectRatio}
-          onChange={handleChange}
-        >
-          <option value="1080x1080">1080:1080</option>
-          <option value="1920x1080">1920x1080</option> 
-        </select> */}
-      
-
-      {/* <div className="form-group">
-        <label htmlFor="seed">Seed</label>
-        <input
-          type="text"
-          id="seed"
-          name="seed"
-          value={formData.seed}
-          onChange={handleChange}
-          placeholder="e.g., 12345..."
-        />
-      </div> */}
-
-      {/* <div className="form-group">
-        <label htmlFor="product">Product Name</label>
-        <input
-          type="text"
-          id="product"
-          name="product"
-          value={formData.product}
-          onChange={handleChange}
-          placeholder="e.g., Skincare Serum, Coffee Maker..."
-        />
-      </div> */}
-
-      {/* <div className="form-group">
-        <label htmlFor="imageCount">Number of Images</label>
-        <select
-          id="imageCount"
-          name="imageCount"
-          value={formData.imageCount}
-          onChange={handleChange}
-        >
-          <option value="1">1</option>
-          <option value="3">3</option>
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-      </div> */}
 
   <div className="form-group">
   <label htmlFor="imageCount">Number of Images</label>
