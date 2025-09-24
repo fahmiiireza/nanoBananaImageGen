@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 function ScriptForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     imageDescription: '',
-    products:'',
     googleDriveFolderName: '',
     model: 'Nano Banana (Text to Image)',
     imageCount: 1,
