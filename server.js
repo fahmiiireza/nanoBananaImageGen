@@ -8,7 +8,7 @@ const generateRoute = require('./api/routes/generate.js');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Middleware

@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 function ScriptForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     imageDescription: '',
-    aspectRatio: '1080x1920',
-    seed: '',
+    aspectRatio: '1080x1080',
+    seed:'',
     negativePrompt: '',
-    product: '',
+    products:'',
     googleDriveFolderName: '',
     vertical: 'EDU',
     model: 'Nano Banana (Text to Image)',
@@ -115,18 +115,28 @@ function ScriptForm({ onSubmit, loading }) {
 
       <div className="form-group">
         <label htmlFor="aspectRatio">Aspect Ratio</label>
-        <select
+        <input type="text"
+               id="aspectRatio"
+               name="aspectRatio"
+               value={formData.aspectRatio}
+               readOnly
+               onChange={handleChange}
+        
+        />
+        </div>
+        {/* <select
+          
           id="aspectRatio"
           name="aspectRatio"
           value={formData.aspectRatio}
           onChange={handleChange}
         >
-          <option value="1080x1920">1080x1920</option>
-          <option value="1920x1080">1920x1080</option>
-        </select>
-      </div>
+          <option value="1080x1080">1080:1080</option>
+          <option value="1920x1080">1920x1080</option> 
+        </select> */}
+      
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="seed">Seed</label>
         <input
           type="text"
@@ -136,9 +146,9 @@ function ScriptForm({ onSubmit, loading }) {
           onChange={handleChange}
           placeholder="e.g., 12345..."
         />
-      </div>
+      </div> */}
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="product">Product Name</label>
         <input
           type="text"
@@ -148,9 +158,9 @@ function ScriptForm({ onSubmit, loading }) {
           onChange={handleChange}
           placeholder="e.g., Skincare Serum, Coffee Maker..."
         />
-      </div>
+      </div> */}
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="imageCount">Number of Images</label>
         <select
           id="imageCount"
@@ -166,7 +176,21 @@ function ScriptForm({ onSubmit, loading }) {
           <option value="50">50</option>
           <option value="100">100</option>
         </select>
-      </div>
+      </div> */}
+
+  <div className="form-group">
+  <label htmlFor="imageCount">Number of Images</label>
+  <input
+    type="number"
+    id="imageCount"
+    name="imageCount"
+    value={formData.imageCount}
+    onChange={handleChange}
+    min="1"
+    step="1"
+  />
+</div>
+
 
       {formData.model !== 'Flux Pro (Text to Image)' && formData.model !== 'Nano Banana (Text to Image)' && (
         <div className="form-group">
