@@ -22,7 +22,7 @@ function App() {
     try {
       const response = await generateSegments(formData);
       console.log('Generation successful:', response);
-      setSuccessInfo(response);
+      window.location.href = '/gdrive-gallery';
     } catch (err) {
       console.error('Generation failed:', err);
       setError(err.message || 'Something went wrong');

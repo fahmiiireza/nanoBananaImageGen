@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const multer = require('multer');
 const generateRoute = require('./api/routes/generate.js');
+const gdriveRoute = require('./api/routes/gdrive.js');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // API Routes (before static files)
 app.use('/api', upload.array('image'), generateRoute);
+app.use('/api/gdrive', gdriveRoute);
 
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, 'client/dist')));
@@ -24,6 +26,10 @@ app.use(express.static(path.join(__dirname, 'client/dist')));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
+});
+
+app.get('/gdrive-gallery', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'gdrive-gallery.html'));
 });
 
 // Catch all handler - send React app for any route not handled above
