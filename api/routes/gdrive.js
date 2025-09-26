@@ -43,6 +43,37 @@ router.delete('/files/:fileId', async (req, res) => {
   }
 });
 
+// PATCH /files/:fileId  -- rename file (add this to gdrive.js)
+router.patch('/files/:fileId', async (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+    const { name } = req.body;
+
+    if (!fileId) {
+      return res.status(400).json({ error: 'Missing fileId parameter' });
+    }
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Missing or invalid "name" in request body' });
+    }
+
+    // update file name
+    const response = await drive.files.update({
+      fileId,
+      requestBody: {
+        name: name.trim()
+      },
+      fields: 'id, name, mimeType, modifiedTime, webViewLink'
+    });
+
+    // return updated metadata
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error renaming file on Google Drive:', error);
+    res.status(500).json({ error: 'Failed to rename file', details: error.message });
+  }
+});
+
+
 router.get('/image/:fileId', async (req, res) => {
   try {
     const fileId = req.params.fileId;
@@ -59,5 +90,30 @@ router.get('/image/:fileId', async (req, res) => {
     res.status(500).json({ error: 'Failed to serve image from Google Drive' });
   }
 });
+// Rename a file
+router.patch('/files/:fileId', async (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+    const newName = req.body.name;
+
+    if (!newName) {
+      return res.status(400).json({ error: 'New file name is required' });
+    }
+
+    const response = await drive.files.update({
+      fileId: fileId,
+      requestBody: {
+        name: newName,
+      },
+      fields: 'id, name',
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error renaming file in Google Drive:', error);
+    res.status(500).json({ error: 'Failed to rename file in Google Drive' });
+  }
+});
+
 
 module.exports = router;
