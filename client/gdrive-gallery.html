@@ -213,6 +213,12 @@
       return res.json();
     }
 
+    async function fetchPrompt(fileId) {
+      const res = await fetch(`/api/gdrive/prompt/${fileId}`);
+      if (!res.ok) throw new Error("Fetch prompt error " + res.status);
+      return res.json();
+    }
+
     function mapItem(item){
       return {
         id: item.id,
@@ -252,7 +258,21 @@
     function render() {
       const q = searchInput.value.toLowerCase();
       const items = allItems.filter(i => !q || i.name.toLowerCase().includes(q));
+      const promptFile = allItems.find(i => i.name.toLowerCase() === 'prompt.json');
       gridEl.innerHTML='';
+
+      if (promptFile) {
+        fetchPrompt(promptFile.id).then(data => {
+          if (data) {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'alert alert-info w-100';
+            promptDiv.innerHTML = `<strong>Prompt:</strong> ${data.imageDescription}`;
+            gridEl.insertBefore(promptDiv, gridEl.firstChild);
+          }
+        }).catch(err => {
+          console.error("Error fetching prompt:", err);
+        });
+      }
 
       if (items.length===0){ emptyEl.style.display='block'; return; }
       else emptyEl.style.display='none';

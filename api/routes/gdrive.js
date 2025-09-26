@@ -90,6 +90,38 @@ router.get('/image/:fileId', async (req, res) => {
     res.status(500).json({ error: 'Failed to serve image from Google Drive' });
   }
 });
+
+router.get('/prompt/:fileId', async (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+    const response = await drive.files.get(
+      { fileId: fileId, alt: 'media' },
+      { responseType: 'stream' }
+    );
+
+    let data = '';
+    response.data.on('data', chunk => {
+      data += chunk;
+    });
+
+    response.data.on('end', () => {
+      try {
+        const json = JSON.parse(data);
+        res.json(json);
+      } catch (err) {
+        res.status(400).json({ error: 'Invalid JSON content in file' });
+      }
+    });
+
+    response.data.on('error', err => {
+      res.status(500).json({ error: 'Error reading file stream' });
+    });
+  } catch (error) {
+    console.error('Error fetching JSON file from Google Drive:', error);
+    res.status(500).json({ error: 'Failed to fetch JSON file from Google Drive' });
+  }
+});
+
 // Rename a file
 router.patch('/files/:fileId', async (req, res) => {
   try {
