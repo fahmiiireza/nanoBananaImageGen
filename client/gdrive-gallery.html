@@ -44,7 +44,7 @@
           <button id="listBtn" class="btn btn-sm btn-outline-primary">List</button>
         </div>
         <button id="refreshBtn" class="btn btn-sm btn-secondary ms-2">Refresh</button>
-        <button id="submitBtn" class="btn btn-lg btn-primary border-7" style="display: none; padding: 5%;">Submit</button>
+        <button id="submitBtn" class="btn btn-lg btn-primary" style="display: none;">Submit</button>
       </div>
     </div>
 
@@ -176,28 +176,66 @@
     submitBtn.addEventListener('click', async () => {
       const currentFolder = historyStack[historyStack.length - 1];
       if (currentFolder && historyStack.length > 1) {
-        const folderName = currentFolder.name;
         const folderId = currentFolder.id;
-        const verticalName = folderName.split('-')[1]?.trim();
+        const currentFolderName = currentFolder.name;
+
+        // 1. Get the file count
+        const imageCount = allItems.filter(item => item.mimeType.startsWith('image/')).length;
         const fileIds = allItems.filter(item => item.mimeType.startsWith('image/')).map(item => item.id);
 
+        // 2. Get the current date
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const year = today.getFullYear();
+        const dateString = `${month}${day}${year}`;
+
+        // 3. Construct the new folder name
+        const nameParts = currentFolderName.split(' - ');
+        const imageIndex = nameParts.findIndex(part => part.toLowerCase() === 'image');
+        const baseName = imageIndex > -1 ? nameParts.slice(0, imageIndex).join(' - ') : currentFolderName;
+        const newFolderName = `${baseName} - Image - ${dateString} - (${imageCount})`;
+
+        console.log('Generated Folder Name:', newFolderName);
+
         try {
-          const response = await fetch('https://n8n-v2.sigmagrowthpartners.com/webhook/move-folder', {
-            method: 'POST',
+          // 4. Rename the folder
+          const renameRes = await fetch(`/api/gdrive/files/${folderId}`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ folderName, folderId, verticalName, fileIds }),
+            body: JSON.stringify({ name: newFolderName })
           });
 
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          if (!renameRes.ok) {
+            const errorResponse = await renameRes.json();
+            throw new Error(errorResponse.error || 'Folder rename failed');
+          }
 
-          const data = await response.json();
-          submitSuccessMessage.innerHTML = `Folder \'${data.folderName}\' moved successfully! You can view it <a href="${data.linkToFolder}" target="_blank" rel="noopener noreferrer">here</a>.`;
+          // Update the UI with the new name
+          currentFolder.name = newFolderName;
+          renderBreadcrumb();
+
+          // 5. Call the webhook with the new folder name
+          const verticalName = newFolderName.split(' - ')[1]?.trim();
+          const webhookResponse = await fetch('https://n8n-v2.sigmagrowthpartners.com/webhook/move-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folderName: newFolderName, folderId, verticalName, fileIds }),
+          });
+
+          if (!webhookResponse.ok) {
+            throw new Error(`Webhook failed with status: ${webhookResponse.status}`);
+          }
+
+          const webhookData = await webhookResponse.json();
+          submitSuccessMessage.innerHTML = `Folder '${newFolderName}' renamed and moved successfully! You can view it <a href="${webhookData.linkToFolder}" target="_blank" rel="noopener noreferrer">here</a>.`
+          submitSuccessMessage.className = 'alert alert-success';
           submitSuccessMessage.style.display = 'block';
 
         } catch (error) {
-          console.error('Error submitting folder information:', error);
+          console.error('Error in submit process:', error);
           submitSuccessMessage.className = 'alert alert-danger';
-          submitSuccessMessage.innerHTML = `Error moving folder: ${error.message}`;
+          submitSuccessMessage.innerHTML = `Error: ${error.message}`;
           submitSuccessMessage.style.display = 'block';
         }
       }
