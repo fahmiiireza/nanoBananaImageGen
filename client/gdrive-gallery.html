@@ -19,6 +19,41 @@
     .card { position:relative; }
     .folder-icon { font-size: 5rem; text-align: center; }
   </style>
+  <style>
+  .submit-btn {
+    display: none; /* Initially hidden */
+    background-color: #007bff;
+    color: white;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(0, 123, 255, 0.5);
+  }
+
+  .submit-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* ✅ Make button responsive */
+  @media (max-width: 576px) {
+    .submit-btn {
+      font-size: 16px;
+      padding: 12px 22px;
+      width: 100%;
+    }
+  }
+</style>
+
 </head>
 <body>
   <div class="container">
@@ -36,16 +71,20 @@
         <input id="searchInput" class="form-control form-control-sm" placeholder="Search image name...">
         <button id="clearSearch" class="btn btn-light btn-sm">Clear</button>
       </div>
+       <div>
+          <div class="btn-group">
+             <button id="backBtn" class="btn btn-sm btn-secondary ms-2">Back</button>
+             <button id="refreshBtn" class="btn btn-sm btn-secondary ms-2">Refresh</button>
+          </div>
+          <div class="btn-group">
+             <button id="gridBtn" class="btn btn-sm btn-primary">Grid</button>
+             <button id="listBtn" class="btn btn-sm btn-outline-primary">List</button>
+          </div>
+         <div class="text-center mt-3">
+         <button id="submitBtn" class="submit-btn">Submit</button>
+         </div>
 
-      <div>
-        <button id="backBtn" class="btn btn-sm btn-secondary ms-2">Back</button>
-        <div class="btn-group">
-          <button id="gridBtn" class="btn btn-sm btn-primary">Grid</button>
-          <button id="listBtn" class="btn btn-sm btn-outline-primary">List</button>
-        </div>
-        <button id="refreshBtn" class="btn btn-sm btn-secondary ms-2">Refresh</button>
-        <button id="submitBtn" class="btn btn-lg btn-primary" style="display: none;">Submit</button>
-      </div>
+       </div>
     </div>
 
     <div id="loading" class="loading">
@@ -324,11 +363,20 @@
         if (item.mimeType === 'application/vnd.google-apps.folder') {
           card.classList.add('folder-card');
           card.innerHTML=`
-            <div class="card-body text-center">
-              <div class="folder-icon">📁</div>
-              <h6 class="card-title mb-1">${item.name}</h6>
-            </div>`;
-          card.addEventListener('click', ()=>openFolder(item.id, item.name));
+             <button class="btn btn-sm btn-danger delete-btn" style="position:absolute; top:5px; right:5px;">🗑</button>
+    <div class="card-body text-center folder-body" style="cursor:pointer;">
+      <div class="folder-icon" style="font-size:40px;">📁</div>
+      <h6 class="card-title mb-1">${item.name}</h6>
+    </div>
+  `;
+            // Clicking folder name opens folder
+  card.querySelector('.folder-body').addEventListener('click', () => openFolder(item.id, item.name));
+
+  // Clicking trash deletes folder
+  card.querySelector('.delete-btn').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent folder from opening
+    deleteItem(item);
+  });
         } else if (item.mimeType.startsWith('image/')) {
           if (currentView==='grid'){
             card.innerHTML=`
@@ -413,7 +461,9 @@
     async function deleteItem(img){
       if(!confirm(`Delete "${img.name}" permanently?`)) return;
       try {
-        const res = await fetch(`/api/gdrive/files/${img.id}`, { method: 'DELETE' });
+        const isFolder = img.mimeType === "application/vnd.google-apps.folder";
+        const res = await fetch(`/api/gdrive/${isFolder ? 'folders' : 'files'}/${img.id}`, { method: 'DELETE' });
+
         if(!res.ok) throw new Error("Delete failed " + res.status);
         allItems = allItems.filter(i=>i.id!==img.id);
         render();

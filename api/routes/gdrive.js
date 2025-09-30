@@ -16,6 +16,36 @@ const drive = google.drive({
   auth: oauth2Client,
 });
 
+//deleting folder recursive 
+
+router.delete('/folders/:folderId', async (req, res) => {
+  const folderId = req.params.folderId;
+  try {
+    // Recursively delete all contents first
+    const response = await drive.files.list({
+      q: `'${folderId}' in parents`,
+      fields: 'files(id, mimeType)'
+    });
+
+    for (const file of response.data.files) {
+      if (file.mimeType === 'application/vnd.google-apps.folder') {
+        await fetch(`/api/gdrive/folders/${file.id}`, { method: 'DELETE' });
+      } else {
+        await drive.files.delete({ fileId: file.id });
+      }
+    }
+
+    // Now delete the folder itself
+    await drive.files.delete({ fileId: folderId });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    res.status(500).json({ error: 'Failed to delete folder' });
+  }
+});
+
+
 router.get('/files', async (req, res) => {
   try {
     const folderId = req.query.folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
@@ -29,7 +59,7 @@ router.get('/files', async (req, res) => {
     res.status(500).json({ error: 'Failed to list files from Google Drive' });
   }
 });
-
+//----------------------------------------------------------------------------------------
 router.delete('/files/:fileId', async (req, res) => {
   try {
     const fileId = req.params.fileId;
@@ -42,6 +72,32 @@ router.delete('/files/:fileId', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete file from Google Drive' });
   }
 });
+
+// Delete a file
+router.delete('/files/:fileId', async (req, res) => {
+  try {
+    await drive.files.delete({ fileId: req.params.fileId });
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting file from Google Drive:', error);
+    res.status(500).json({ error: 'Failed to delete file from Google Drive' });
+  }
+});
+
+// ✅ Add this right below 👇
+
+// Delete a folder
+router.delete('/folders/:folderId', async (req, res) => {
+  try {
+    const folderId = req.params.folderId;
+    await drive.files.delete({ fileId: folderId });
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting folder from Google Drive:', error);
+    res.status(500).json({ error: 'Failed to delete folder from Google Drive' });
+  }
+});
+
 
 // PATCH /files/:fileId  -- rename file (add this to gdrive.js)
 router.patch('/files/:fileId', async (req, res) => {
