@@ -18,6 +18,7 @@
     .delete-btn { position:absolute; top:8px; right:8px; }
     .card { position:relative; }
     .folder-icon { font-size: 5rem; text-align: center; }
+    .card.selected { border: 2px solid #007bff; box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); }
   </style>
   <style>
   .submit-btn {
@@ -75,6 +76,8 @@
           <div class="btn-group">
              <button id="backBtn" class="btn btn-sm btn-secondary ms-2">Back</button>
              <button id="refreshBtn" class="btn btn-sm btn-secondary ms-2">Refresh</button>
+             <button id="toggleSelectModeBtn" class="btn btn-sm btn-outline-primary ms-2">Select</button>
+             <button id="deleteSelectedBtn" class="btn btn-sm btn-danger ms-2" style="display:none;">Delete Selected</button>
           </div>
           <div class="btn-group">
              <button id="gridBtn" class="btn btn-sm btn-primary">Grid</button>
@@ -146,6 +149,8 @@
     let allItems = [];
     let selectedItem = null;
     let historyStack = [];
+    let selectMode = false; // New: selection mode flag
+    let selectedItems = new Set(); // New: stores IDs of selected items
 
     const gridEl = document.getElementById('grid');
     const loadingEl = document.getElementById('loading');
@@ -177,6 +182,11 @@
     deleteBtnModal.addEventListener('click', () => {
       if (selectedItem) deleteItem(selectedItem);
     });
+
+    // New: Toggle select mode
+    toggleSelectModeBtn.addEventListener('click', () => toggleSelectMode());
+    // New: Delete selected items
+    deleteSelectedBtn.addEventListener('click', () => deleteSelected());
 
     // Open rename modal from preview
     renameBtnModal.addEventListener('click', () => {
@@ -360,35 +370,65 @@
         const card=document.createElement('div');
         card.className='card';
 
+        // New: Add selected class if item is selected
+        if (selectedItems.has(item.id)) {
+          card.classList.add('selected');
+        }
+
         if (item.mimeType === 'application/vnd.google-apps.folder') {
           card.classList.add('folder-card');
           card.innerHTML=`
-             <button class="btn btn-sm btn-danger delete-btn" style="position:absolute; top:5px; right:5px;">🗑</button>
+             <button class="btn btn-sm btn-danger delete-btn" style="position:absolute; top:5px; right:5px; ${selectMode ? 'display:none;' : ''}">🗑</button>
     <div class="card-body text-center folder-body" style="cursor:pointer;">
       <div class="folder-icon" style="font-size:40px;">📁</div>
       <h6 class="card-title mb-1">${item.name}</h6>
     </div>
   `;
             // Clicking folder name opens folder
-  card.querySelector('.folder-body').addEventListener('click', () => openFolder(item.id, item.name));
+            const folderBody = card.querySelector('.folder-body');
+            if (selectMode) {
+                folderBody.style.cursor = 'pointer'; // Indicate clickable for selection
+                folderBody.addEventListener('click', () => toggleItemSelection(item, card));
+            } else {
+                folderBody.style.cursor = 'pointer';
+                folderBody.addEventListener('click', () => openFolder(item.id, item.name));
+            }
 
   // Clicking trash deletes folder
-  card.querySelector('.delete-btn').addEventListener('click', (e) => {
+  const deleteButton = card.querySelector('.delete-btn');
+  if (deleteButton) {
+    deleteButton.addEventListener('click', (e) => {
     e.stopPropagation(); // Prevent folder from opening
     deleteItem(item);
   });
+  }
         } else if (item.mimeType.startsWith('image/')) {
           if (currentView==='grid'){
             card.innerHTML=`
-              <button class="btn btn-sm btn-danger delete-btn">🗑</button>
+              <button class="btn btn-sm btn-danger delete-btn" style="position:absolute; top:8px; right:8px; ${selectMode ? 'display:none;' : ''}">🗑</button>
               <img src="${item.imageProxyLink}" class="card-img-top card-thumb" alt="${item.name}">
               <div class="card-body">
                 <h6 class="card-title mb-1">${item.name}</h6>
                 <p class="text-muted" style="font-size:0.8rem;">${item.modifiedTime ? new Date(item.modifiedTime).toLocaleString() : ''}</p>
               </div>`;
-            card.querySelector('img').addEventListener('click', ()=>openPreview(item));
-            card.querySelector('.card-body').addEventListener('click', ()=>openPreview(item));
-            card.querySelector('.delete-btn').addEventListener('click', (e)=>{ e.stopPropagation(); deleteItem(item); });
+            const imgEl = card.querySelector('img');
+            const cardBody = card.querySelector('.card-body');
+            const deleteButton = card.querySelector('.delete-btn');
+
+            if (selectMode) {
+                imgEl.style.cursor = 'pointer';
+                cardBody.style.cursor = 'pointer';
+                imgEl.addEventListener('click', () => toggleItemSelection(item, card));
+                cardBody.addEventListener('click', () => toggleItemSelection(item, card));
+            } else {
+                imgEl.style.cursor = 'pointer';
+                cardBody.style.cursor = 'pointer';
+                imgEl.addEventListener('click', ()=>openPreview(item));
+                cardBody.addEventListener('click', ()=>openPreview(item));
+            }
+            if (deleteButton) {
+                deleteButton.addEventListener('click', (e)=>{ e.stopPropagation(); deleteItem(item); });
+            }
           } else {
             card.innerHTML=`
               <div class="d-flex p-2 align-items-center">
@@ -397,16 +437,123 @@
                   <h6 class="mb-0">${item.name}</h6>
                   <small class="text-muted">${item.modifiedTime ? new Date(item.modifiedTime).toLocaleString() : ''}</small>
                 </div>
-                <button class="btn btn-sm btn-outline-primary me-2">View</button>
-                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                <button class="btn btn-sm btn-outline-primary me-2" ${selectMode ? 'style="display:none;"' : ''}>View</button>
+                <button class="btn btn-sm btn-outline-danger" ${selectMode ? 'style="display:none;"' : ''}>Delete</button>
               </div>`;
-            card.querySelector('.btn-outline-primary').addEventListener('click', ()=>openPreview(item));
-            card.querySelector('.btn-outline-danger').addEventListener('click', ()=>deleteItem(item));
+            const viewButton = card.querySelector('.btn-outline-primary');
+            const deleteButton = card.querySelector('.btn-outline-danger');
+            const cardContent = card.querySelector('.d-flex');
+
+            if (selectMode) {
+                cardContent.style.cursor = 'pointer';
+                cardContent.addEventListener('click', () => toggleItemSelection(item, card));
+            } else {
+                if (viewButton) viewButton.addEventListener('click', ()=>openPreview(item));
+            }
+            if (deleteButton) deleteButton.addEventListener('click', ()=>deleteItem(item));
           }
         }
         col.appendChild(card);
         gridEl.appendChild(col);
       });
+    }
+
+    function toggleItemSelection(item, card) {
+      if (selectedItems.has(item.id)) {
+        selectedItems.delete(item.id);
+        card.classList.remove('selected');
+      } else {
+        selectedItem.add(item.id);
+        card.classList.add('selected');
+      }
+      deleteSelectedBtn.style.display = selectedItems.size > 0 ? 'inline-block' : 'none';
+    }
+
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      selectModeBtn.textContent = selectMode ? 'Cancel' : 'Select';
+      selectModeBtn.classList.toggle('btn-outline-primary');
+      selectModeBtn.classList.toggle('btn-primary');
+      if (!selectMode) {
+        selectedItems.clear();
+        render();
+        deleteSelectedBtn.style.display = 'none';
+      }
+    }
+
+    async function deleteSelected() {
+      if (selectedItems.size === 0) {
+        alert('Please select items to delete.');
+        return;
+      }
+      if (!confirm(`Delete ${selectedItems.size} selected items permanently?`)) return;
+
+      const promises = [];
+      for (const itemId of selectedItems) {
+        const item = allItems.find(i => i.id === itemId);
+        if (item) {
+          promises.push(deleteItem(item, true));
+        }
+      }
+
+      try {
+        await Promise.all(promises);
+        alert('Selected items deleted successfully.');
+        selectedItems.clear();
+        toggleSelectMode();
+      } catch (error) {
+        console.error('Error deleting selected items:', error);
+        alert('An error occured while deleting selected items. Check the console for details.');
+      }
+    }
+
+    function toggleItemSelection(item, card) {
+      if (selectedItems.has(item.id)) {
+        selectedItems.delete(item.id);
+        card.classList.remove('selected');
+      } else {
+        selectedItems.add(item.id);
+        card.classList.add('selected');
+      }
+      deleteSelectedBtn.style.display = selectedItems.size > 0 ? 'inline-block' : 'none';
+    }
+
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      toggleSelectModeBtn.textContent = selectMode ? 'Cancel Selection' : 'Select';
+      toggleSelectModeBtn.classList.toggle('btn-outline-primary');
+      toggleSelectModeBtn.classList.toggle('btn-primary');
+      if (!selectMode) {
+        selectedItems.clear();
+        deleteSelectedBtn.style.display = 'none';
+      }
+      render(); // Re-render to apply/remove selection styles and hide/show single delete buttons
+    }
+
+    async function deleteSelected() {
+      if (selectedItems.size === 0) {
+        alert('Please select items to delete.');
+        return;
+      }
+      if (!confirm(`Delete ${selectedItems.size} selected items permanently?`)) return;
+
+      const promises = [];
+      for (const itemId of selectedItems) {
+        const item = allItems.find(i => i.id === itemId);
+        if (item) {
+          promises.push(deleteItem(item, true)); // Pass true for silent deletion
+        }
+      }
+
+      try {
+        await Promise.all(promises);
+        alert('Selected items deleted successfully.');
+        selectedItems.clear();
+        toggleSelectMode(); // Exit select mode after deletion
+      } catch (error) {
+        console.error('Error deleting selected items:', error);
+        alert('An error occurred while deleting selected items. Check the console for details.');
+      }
     }
 
     function openFolder(folderId, folderName) {
@@ -458,20 +605,25 @@
       imageModal.show();
     }
 
-    async function deleteItem(img){
-      if(!confirm(`Delete "${img.name}" permanently?`)) return;
+    async function deleteItem(img, silent = false){
+      if(!silent && !confirm(`Delete "${img.name}" permanently?`)) return;
       try {
         const isFolder = img.mimeType === "application/vnd.google-apps.folder";
         const res = await fetch(`/api/gdrive/${isFolder ? 'folders' : 'files'}/${img.id}`, { method: 'DELETE' });
 
         if(!res.ok) throw new Error("Delete failed " + res.status);
         allItems = allItems.filter(i=>i.id!==img.id);
-        render();
-        imageModal.hide();
-        alert("File deleted");
+        if (!silent) {
+          render();
+          imageModal.hide();
+          alert("File deleted"); 
+        }
       } catch(err) {
-        console.error(err);
-        alert("Delete error. Check console.");
+        if (!silent) {
+          console.error(err);
+          alert("Delete error. Check console."); 
+        }
+        throw err;
       }
     }
 
