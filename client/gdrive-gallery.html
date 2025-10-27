@@ -398,9 +398,9 @@
   const deleteButton = card.querySelector('.delete-btn');
   if (deleteButton) {
     deleteButton.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent folder from opening
-    deleteItem(item);
-  });
+      e.stopPropagation(); // Prevent folder from opening
+      deleteItem(item);
+    });
   }
         } else if (item.mimeType.startsWith('image/')) {
           if (currentView==='grid'){
